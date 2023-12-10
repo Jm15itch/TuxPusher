@@ -1302,28 +1302,41 @@ void printAttrib(SDL_GLattr attr, char* name)
 }
 #endif
 
-#ifdef __linux__ 
 // This is for benchmarking a specific function.
 // Returns the processing time. 
-unsigned int BenchmarkFunction(void (*F)(), int samples)
+void BenchmarkFunction()
 {
-    (*F)(); // Preempt the function to skip initializations
-    unsigned int average = 0;
-    for (int i = 0; i < samples; i++)
+    #ifdef __linux__ 
+    printf("\nInternal function benchmark\n\nBenchmarking...\n");
+    struct timespec InitalTime;
+    struct timespec FinalTime;
+
+    unsigned long long average = 0;
+    for (int i = 0; i < 10000; i++)
     {
         struct timespec InitalTime;
         struct timespec FinalTime;
         clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &InitalTime);
-        (*F)(); // execute function
+        takeStack();
         clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &FinalTime);
         average += FinalTime.tv_nsec - InitalTime.tv_nsec;
     }
-    if (average % 2 == 1) { // odd number detected!
-        average += 1;
+    printf("Take Stack: %i ns\n", average/10000);
+
+    average = 0;
+    for (int i = 0; i < 100; i++)
+    {
+        struct timespec InitalTime;
+        struct timespec FinalTime;
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &InitalTime);
+        stepCollisions();
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &FinalTime);
+        average += FinalTime.tv_nsec - InitalTime.tv_nsec;
     }
-    return average/samples;
+    printf("Collision Function: %i ns\n", average/100);
+    #endif
 }
-#endif
+
 
 // Print
 void PrintDebug() {
@@ -1411,13 +1424,7 @@ int main(int argc, char** argv)
             break;
         }
         else if (!strcmp(argv[i], "--benchmark") || !strcmp(argv[i], "-bm")) {
-            printf("==============================\n\n   -= Benchmark results =-\n\n");
-            printf("Collision Function: %i ns\n", BenchmarkFunction((void(*)())stepCollisions, 512));
-            printf("Take Stack: %i ns\n", BenchmarkFunction((void(*)())takeStack, 512));
-            printf("inject Figures: %i ns\n", BenchmarkFunction((void(*)())injectFigure, 512));
-            printf("New Game Function: %i ns\n\n", BenchmarkFunction((void(*)())newGame, 16));
-            printf("Inside Pitch: %i ns\n", BenchmarkFunction((void(*)())insidePitch, 512));
-            printf("\n==============================\n");
+            BenchmarkFunction();
             exit(0);
         }
         else if (!strcmp(argv[i], "--pushspeed") || !strcmp(argv[i], "-ps")) {
