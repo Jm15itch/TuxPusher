@@ -1325,6 +1325,52 @@ unsigned int BenchmarkFunction(void (*F)(), int samples)
 }
 #endif
 
+// Print
+void PrintDebug() {
+#ifndef BUILD_GLFW
+    // dump some info
+    printAttrib(SDL_GL_DOUBLEBUFFER, "GL_DOUBLEBUFFER");
+    printAttrib(SDL_GL_DEPTH_SIZE, "GL_DEPTH_SIZE");
+    printAttrib(SDL_GL_RED_SIZE, "GL_RED_SIZE");
+    printAttrib(SDL_GL_GREEN_SIZE, "GL_GREEN_SIZE");
+    printAttrib(SDL_GL_BLUE_SIZE, "GL_BLUE_SIZE");
+    printAttrib(SDL_GL_ALPHA_SIZE, "GL_ALPHA_SIZE");
+    printAttrib(SDL_GL_BUFFER_SIZE, "GL_BUFFER_SIZE");
+    printAttrib(SDL_GL_STENCIL_SIZE, "GL_STENCIL_SIZE");
+    printAttrib(SDL_GL_ACCUM_RED_SIZE, "GL_ACCUM_RED_SIZE");
+    printAttrib(SDL_GL_ACCUM_GREEN_SIZE, "GL_ACCUM_GREEN_SIZE");
+    printAttrib(SDL_GL_ACCUM_BLUE_SIZE, "GL_ACCUM_BLUE_SIZE");
+    printAttrib(SDL_GL_ACCUM_ALPHA_SIZE, "GL_ACCUM_ALPHA_SIZE");
+    printAttrib(SDL_GL_STEREO, "GL_STEREO");
+    printAttrib(SDL_GL_MULTISAMPLEBUFFERS, "GL_MULTISAMPLEBUFFERS");
+    printAttrib(SDL_GL_MULTISAMPLESAMPLES, "GL_MULTISAMPLESAMPLES");
+    printAttrib(SDL_GL_ACCELERATED_VISUAL, "GL_ACCELERATED_VISUAL");
+    printAttrib(SDL_GL_RETAINED_BACKING, "GL_RETAINED_BACKING");
+    printAttrib(SDL_GL_CONTEXT_MAJOR_VERSION, "GL_CONTEXT_MAJOR_VERSION");
+    printAttrib(SDL_GL_CONTEXT_MINOR_VERSION, "GL_CONTEXT_MINOR_VERSION");
+    printAttrib(SDL_GL_CONTEXT_FLAGS, "GL_CONTEXT_FLAGS");
+    printAttrib(SDL_GL_CONTEXT_PROFILE_MASK, "GL_CONTEXT_PROFILE_MASK");
+    printAttrib(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, "GL_SHARE_WITH_CURRENT_CONTEXT");
+    printAttrib(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, "GL_FRAMEBUFFER_SRGB_CAPABLE");
+    printAttrib(SDL_GL_CONTEXT_RELEASE_BEHAVIOR, "GL_CONTEXT_RELEASE_BEHAVIOR");
+    printAttrib(SDL_GL_CONTEXT_EGL, "GL_CONTEXT_EGL");
+
+    printf("----\n");
+    
+    SDL_version compiled;
+    SDL_version linked;
+    SDL_VERSION(&compiled);
+    SDL_GetVersion(&linked);
+    printf("Compiled against SDL version %u.%u.%u.\n", compiled.major, compiled.minor, compiled.patch);
+    printf("Linked against SDL version %u.%u.%u.\n", linked.major, linked.minor, linked.patch);
+
+    printf("----\n");
+#else
+    printf("%s\n", glfwGetVersionString());
+    printf("----\n");
+#endif
+}
+
 int main(int argc, char** argv)
 {
     // set game push speed (global variable)
@@ -1345,18 +1391,22 @@ int main(int argc, char** argv)
         }
         else if (!strcmp(argv[i], "--msaa-level") || !strcmp(argv[i], "-msaa")) {
             option_msaa = atoi(argv[i+1]);
+            printf("Updated MSAA Level %i\n", option_msaa);
             break;
         }
         else if (!strcmp(argv[i], "--vertical-sync") || !strcmp(argv[i], "-vs")) {
-            switch (atoi(argv[i+1])) { // sanitizes the vsync options
-                case -1:
-                    option_vsync = -1;
-                    break;
-                case 1:
-                    option_vsync = 1;
-                    break;
-                default:
-                    printf("WARNING: Invalid vsync option, valid options are: -1, 0, 1.");
+            // 0 for immediate updates, 1 for updates synchronized with the vertical retrace, -1 for adaptive vsync
+            if (!strcmp(argv[i+1], "adaptive")) {
+                option_vsync = -1;
+                printf("Vertical Sync mode set to adaptive\n");
+            } else if (!strcmp(argv[i+1], "on")) {
+                option_vsync = 1;
+                printf("Vertical Sync mode set to on\n");
+            } else if (!strcmp(argv[i+1], "off")) {
+                option_vsync = 0;
+                printf("Vertical Sync mode set to off\n");
+            } else {
+                printf("Unknown vertical sync option: %s\n", argv[i+1]);
             }
             break;
         }
@@ -1375,6 +1425,10 @@ int main(int argc, char** argv)
             if(PUSH_SPEED > 32.f)
                 PUSH_SPEED = 32.f;
             printf("Successfully set Push speed to %f", PUSH_SPEED);
+            break;
+        }
+        else if (!strcmp(argv[i], "--debug-info") || !strcmp(argv[i], "-di")) {
+            PrintDebug();
             break;
         }
     }
@@ -1448,49 +1502,6 @@ int main(int argc, char** argv)
     // debug (cant do this on ES unless >= ES 3.2)
 #if defined(GL_DEBUG) && !defined(__MINGW32__) // no need to debug the windows release
     esDebug(1);
-#endif
-
-#ifndef BUILD_GLFW
-    // dump some info
-    printAttrib(SDL_GL_DOUBLEBUFFER, "GL_DOUBLEBUFFER");
-    printAttrib(SDL_GL_DEPTH_SIZE, "GL_DEPTH_SIZE");
-    printAttrib(SDL_GL_RED_SIZE, "GL_RED_SIZE");
-    printAttrib(SDL_GL_GREEN_SIZE, "GL_GREEN_SIZE");
-    printAttrib(SDL_GL_BLUE_SIZE, "GL_BLUE_SIZE");
-    printAttrib(SDL_GL_ALPHA_SIZE, "GL_ALPHA_SIZE");
-    printAttrib(SDL_GL_BUFFER_SIZE, "GL_BUFFER_SIZE");
-    printAttrib(SDL_GL_STENCIL_SIZE, "GL_STENCIL_SIZE");
-    printAttrib(SDL_GL_ACCUM_RED_SIZE, "GL_ACCUM_RED_SIZE");
-    printAttrib(SDL_GL_ACCUM_GREEN_SIZE, "GL_ACCUM_GREEN_SIZE");
-    printAttrib(SDL_GL_ACCUM_BLUE_SIZE, "GL_ACCUM_BLUE_SIZE");
-    printAttrib(SDL_GL_ACCUM_ALPHA_SIZE, "GL_ACCUM_ALPHA_SIZE");
-    printAttrib(SDL_GL_STEREO, "GL_STEREO");
-    printAttrib(SDL_GL_MULTISAMPLEBUFFERS, "GL_MULTISAMPLEBUFFERS");
-    printAttrib(SDL_GL_MULTISAMPLESAMPLES, "GL_MULTISAMPLESAMPLES");
-    printAttrib(SDL_GL_ACCELERATED_VISUAL, "GL_ACCELERATED_VISUAL");
-    printAttrib(SDL_GL_RETAINED_BACKING, "GL_RETAINED_BACKING");
-    printAttrib(SDL_GL_CONTEXT_MAJOR_VERSION, "GL_CONTEXT_MAJOR_VERSION");
-    printAttrib(SDL_GL_CONTEXT_MINOR_VERSION, "GL_CONTEXT_MINOR_VERSION");
-    printAttrib(SDL_GL_CONTEXT_FLAGS, "GL_CONTEXT_FLAGS");
-    printAttrib(SDL_GL_CONTEXT_PROFILE_MASK, "GL_CONTEXT_PROFILE_MASK");
-    printAttrib(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, "GL_SHARE_WITH_CURRENT_CONTEXT");
-    printAttrib(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, "GL_FRAMEBUFFER_SRGB_CAPABLE");
-    printAttrib(SDL_GL_CONTEXT_RELEASE_BEHAVIOR, "GL_CONTEXT_RELEASE_BEHAVIOR");
-    printAttrib(SDL_GL_CONTEXT_EGL, "GL_CONTEXT_EGL");
-
-    printf("----\n");
-    
-    SDL_version compiled;
-    SDL_version linked;
-    SDL_VERSION(&compiled);
-    SDL_GetVersion(&linked);
-    printf("Compiled against SDL version %u.%u.%u.\n", compiled.major, compiled.minor, compiled.patch);
-    printf("Linked against SDL version %u.%u.%u.\n", linked.major, linked.minor, linked.patch);
-
-    printf("----\n");
-#else
-    printf("%s\n", glfwGetVersionString());
-    printf("----\n");
 #endif
 
 //*************************************

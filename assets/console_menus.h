@@ -16,7 +16,7 @@
 "Change MSAA Levels (1, 2, 4, 8, 16)\n" \
 "    --msaa-level {VALUE}\n" \
 "    --msaa {VALUE}\n\n" \
-"Change VSYNC Settings (-1, 0, 1)\n" \
+"Change VSYNC Settings (off, on, adaptive)\n" \
 "    --vertical-sync {OPTION}\n" \
 "    --vs {OPTION}\n\n" \
 "Change Game Speed Settings (1-32)\n" \
