@@ -158,9 +158,9 @@ coin coins[MAX_COINS] = {0};
 // 0b0000_0001 = trophie 1
 // 0b0000_0101 = trophie 1 and 3
 char trophies_bits = 0; 
-#define trophies_set(x) trophies_bits |= (0b1 << x)
+#define trophies_set(x) trophies_bits |= (1 << x)
 #define trophies_clear() trophies_bits = 0
-#define trophies_get(x) (trophies_bits >> x) & 0b1
+#define trophies_get(x) (trophies_bits >> x) & 1
 #define trophies_all() trophies_bits
 
 
