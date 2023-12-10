@@ -1325,19 +1325,6 @@ unsigned int BenchmarkFunction(void (*F)(), int samples)
 }
 #endif
 
-
-// A small function to perform djb2 hash algorithm. This is for quick string checking and other hash needs.
-// More info here: https://github.com/dim13/djb2/blob/master/docs/hash.md
-unsigned int quickHash(const char *string) 
-{
-    unsigned long hash = 5381;
-    int c;
-    while (c = *string++) {
-        hash = ((hash << 5) + hash) + c;
-    }
-    return (unsigned int)hash; // cast into an int so it's usable with switches.
-}
-
 int main(int argc, char** argv)
 {
     // set game push speed (global variable)
@@ -1349,74 +1336,46 @@ int main(int argc, char** argv)
     // Vertical sync option. 0 for immediate updates, 1 for updates synchronized with the vertical retrace, -1 for adaptive vsync
     int option_vsync = 1;
 
-    // Evaluate hashes for comparing arguments later...
-    const int HASHGEN = 285276507; // --generate-hash
-    const int TINY_HASHGEN = 193429505; // -gh
-    
-    const int HELP = 1950366504; // --help
-    const int TINY_HELP = 5861498; // -h
-
-    const int MSAALEVEL = 2444437574; // --msaa-level
-    const int TINY_MSAALEVEL = 191564340; // -msaa
-
-    const int VSYNC = 596612675; // --vertical-sync
-    const int TINY_VSYNC = 193430011; // -vs
-
-    const int PUSHSPEED = 1053346333; // --push-speed
-    const int TINY_PUSHSPEED = 193429813; // -ps
-
-    const int ARG_BENCHMARK = 3795426538; // --benchmark
-    const int ARG_BENCHMARK_TINY = 193429345; // -bm
-
     // Loop through console arguments and adjust program accordingly.
     // i starts at one to skip the program name.
     for (int i = 1; i < argc; i++) {
-        switch (quickHash(argv[i])) {
-            case HASHGEN:
-            case TINY_HASHGEN:
-                printf("This tool is designed to generate hashes to compare the console arguments to.\n");
-                printf("Hashed value: %u\n", quickHash(argv[i+1]));
-                printf("Prehashed Value: %s\n", argv[i+1]);
-                exit(0);
-            case HELP: // Display the help menu and quit
-            case TINY_HELP:
-                printf(HelpMenu);
-                exit(0);
-            case ARG_BENCHMARK:
-            case ARG_BENCHMARK_TINY: // Benchmark multiple aspects of the game.
-                printf("==============================\n\n   -= Benchmark results =-\n\n");
-                printf("Collision Function: %i ns\n", BenchmarkFunction((void(*)())stepCollisions, 512));
-                printf("Take Stack: %i ns\n", BenchmarkFunction((void(*)())takeStack, 512));
-                printf("inject Figures: %i ns\n", BenchmarkFunction((void(*)())injectFigure, 512));
-                printf("New Game Function: %i ns\n\n", BenchmarkFunction((void(*)())newGame, 16));
-                printf("Inside Pitch: %i ns\n", BenchmarkFunction((void(*)())insidePitch, 512));
-                printf("\n==============================\n");
-                exit(0);
-            case MSAALEVEL: // Change the MSAA level.
-            case TINY_MSAALEVEL:
-                option_msaa = atoi(argv[i+1]);
-                break;
-            case VSYNC: // change the Vsync options.
-            case TINY_VSYNC:
-                switch (atoi(argv[i+1])) { // sanitizes the vsync options
-                    case -1:
-                        option_vsync = -1;
-                        break;
-                    case 1:
-                        option_vsync = 1;
-                        break;
-                    default:
-                        printf("WARNING: Invalid vsync option, valid options are: -1, 0, 1.");
-                }
-                break;
-            case PUSHSPEED: // Change the push speed of the game.
-            case TINY_PUSHSPEED:
-                PUSH_SPEED = atof(argv[i+1]);
-                if(PUSH_SPEED > 32.f) {
-                    PUSH_SPEED = 32.f;
-                }
-                printf("Successfully set Push speed to %f", PUSH_SPEED);
-                break;
+        if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) {
+            printf(HelpMenu);
+            exit(0);
+        }
+        else if (!strcmp(argv[i], "--msaa-level") || !strcmp(argv[i], "-msaa")) {
+            option_msaa = atoi(argv[i+1]);
+            break;
+        }
+        else if (!strcmp(argv[i], "--vertical-sync") || !strcmp(argv[i], "-vs")) {
+            switch (atoi(argv[i+1])) { // sanitizes the vsync options
+                case -1:
+                    option_vsync = -1;
+                    break;
+                case 1:
+                    option_vsync = 1;
+                    break;
+                default:
+                    printf("WARNING: Invalid vsync option, valid options are: -1, 0, 1.");
+            }
+            break;
+        }
+        else if (!strcmp(argv[i], "--benchmark") || !strcmp(argv[i], "-bm")) {
+            printf("==============================\n\n   -= Benchmark results =-\n\n");
+            printf("Collision Function: %i ns\n", BenchmarkFunction((void(*)())stepCollisions, 512));
+            printf("Take Stack: %i ns\n", BenchmarkFunction((void(*)())takeStack, 512));
+            printf("inject Figures: %i ns\n", BenchmarkFunction((void(*)())injectFigure, 512));
+            printf("New Game Function: %i ns\n\n", BenchmarkFunction((void(*)())newGame, 16));
+            printf("Inside Pitch: %i ns\n", BenchmarkFunction((void(*)())insidePitch, 512));
+            printf("\n==============================\n");
+            exit(0);
+        }
+        else if (!strcmp(argv[i], "--pushspeed") || !strcmp(argv[i], "-ps")) {
+            PUSH_SPEED = atof(argv[i+1]);
+            if(PUSH_SPEED > 32.f)
+                PUSH_SPEED = 32.f;
+            printf("Successfully set Push speed to %f", PUSH_SPEED);
+            break;
         }
     }
 
